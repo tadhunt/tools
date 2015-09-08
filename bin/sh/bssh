@@ -1,0 +1,8 @@
+#!/bin/sh
+
+pid=$$
+
+port=`echo $pid | awk '{pid=$1; pid %= 65000; if(pid < 2048) pid += 2048; print pid}'`
+
+#echo bcvi --wrap-ssh -p $port -- -AX $*
+exec bcvi --wrap-ssh -p $port -- -AX $*

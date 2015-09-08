@@ -1,0 +1,72 @@
+#!/bin/bash
+
+set -o nounset
+set -o errexit
+
+EOL=""
+
+IFS=""
+os="$(uname)"
+
+log() {
+#	echo "$*$EOL"		# uncomment to get log messages
+	return
+}
+
+log "HOST   : $(hostname)"
+log "CMDLINE: $*"
+
+case "$os" in
+Darwin)
+	editor="mvim$IFS--remote-tab-silent"
+	;;
+*)
+	editor="gvim$IFS--remote-tab-silent"
+	;;
+esac
+
+argsep=""
+if [ "${BCVI_CONF+x}" = "x" ] ; then
+	editor="$HOME/bin/sh/bcvi"
+	argsep="--"
+fi
+
+args=""
+while [ $# -gt 0 ]  ; do
+	arg=${1}
+	if [ "${arg:0:1}" != "-" ] ; then
+		break				# It's not an arg, don't consume it
+	fi
+
+	shift					# we know it's an arg or end of args, so now consume
+
+	if [ "${arg:0:2}" = "--" ] ; then
+		break
+	fi
+	args="${args}${arg}${IFS}"
+done
+
+files=""
+for file in $* ; do
+	if [ "${file:0:1}" != "+" -a "${os}" = "Linux" ] ; then
+		dir=$(dirname $file)
+		f=$(basename $file)
+		if ! df ${dir} 2>/dev/null | awk '{fs=$1} END { if(match($fs, /^unionfs/)) exit 1; exit 0}' ; then
+			if [ -h ${dir}/.src ] ; then
+				file="${dir}/.src/${f}"
+			else
+				echo "${file}: inside unionfs ... cannot edit";
+				exit 1
+			fi
+		fi
+	fi
+
+	files="${files}${file}${IFS}"
+done
+
+log "EDITOR:" $editor
+log "ARGS  :" ${args}
+log "FILES :" ${files}
+log "RUN   :" $editor ${args} ${argsep} ${files}
+
+exec $editor ${args} ${argsep} ${files}

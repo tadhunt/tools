@@ -1,0 +1,28 @@
+#!/bin/sh
+
+tincd="`which tincd`"
+if [ "$tincd" = "" ] ; then
+	echo "can't find tincd in your path" 1>&2
+	exit 1
+fi
+
+case $1 in
+start)
+	sudo killall tincd > /dev/null 2>&1
+	sudo ${tincd} -n exablox
+	;;
+stop)
+	sudo killall tincd
+	;;
+status)
+	x=`ps aux | grep tincd | grep -v grep`
+	if [ "$x" = "" ] ; then
+		echo vpn not running
+	else
+		echo vpn is running
+	fi
+	;;
+*)
+	echo 'usage: "vpn start" or "vpn stop" or "vpn status"' 1>&2
+	exit 1
+esac
