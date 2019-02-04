@@ -1,0 +1,107 @@
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+
+os=$(uname)
+
+function usage {
+	exec 1>&2
+	echo "Usage: $0 YYYY-MM-DD[:[-]HH[:[-]mm[:[-]ss]]] [files]..."
+	echo "	Changes the date on [files]... to the provided date."
+	echo "	Where YYYY is the new year, MM is the new month, and DD is the new day"
+	echo "	If HH is specified, it is added to the original hour"
+	echo "	If mm is specified, it is added to the original minutes"
+	echo "	If ss is specified, it is added to the original seconds"
+	exit 1
+}
+
+if [ "$os" != "Darwin" ] ; then
+	echo "only works on OSX" 1>&2
+	exit 1
+fi
+
+if [ $# -lt 1 ] ; then
+	usage
+fi
+
+newdate=$1
+shift
+
+nyear=$(echo ${newdate} | sed 's/-.*//g')
+nmonth=$(echo ${newdate} | sed 's/^.*-\([^-]*\)-.*/\1/g')
+nday=$(echo ${newdate} | sed 's/^.*-//g')
+
+ahour=$(echo ${newdate}   | awk -F: '{printf("%s", $2)}')
+aminute=$(echo ${newdate} | awk -F: '{printf("%s", $3)}')
+asecond=$(echo ${newdate} | awk -F: '{printf("%s", $4)}')
+
+if [ -z "${nyear}" -o -z "${nmonth}" -o -z "${nday}" ] ; then
+	echo "ERROR: date syntax" 1>&2
+	usage 
+fi
+
+for file in $* ; do
+	stat "${file}" | awk \
+		-v nyear="${nyear}" \
+		-v nmonth="${nmonth}" \
+		-v nday="${nday}" \
+		\
+		-v ahour="${ahour}" \
+		-v aminute="${aminute}" \
+		-v asecond="${asecond}" \
+		\
+		-v file="${file}" \
+		'
+		BEGIN {
+			months["Jan"] = 1
+			months["Feb"] = 2
+			months["Mar"] = 3
+			months["Apr"] = 4
+			months["May"] = 5
+			months["Jun"] = 6
+			months["Jul"] = 7
+			months["Aug"] = 8
+			months["Sep"] = 9
+			months["Oct"] = 10
+			months["Nov"] = 11
+			months["Dec"] = 12
+		}
+
+		{
+			gsub(/"/, "")
+
+			month = $13
+			day = $14
+			time = $15
+			year = $16
+
+			hour = time
+			sub(/:*/, "", hour)
+
+			minute = time
+			sub(/^[^:]*:/, "", minute)
+			sub(/:.*/, "", minute)
+
+
+			second = time
+			sub(/.*:/, "", second)
+
+			nhour = hour + ahour
+			nminute = minute + aminute
+			nsecond = second + asecond
+
+			printf("%s:\n", file) > "/dev/stderr"
+
+			if(nhour < 0 || nminute < 0 || nsecond < 0) {
+				printf("	ERROR: time adjustment results in a negative time component\n") > "/dev/stderr"
+				exit(1)
+			}
+
+			printf("	Old Date %04d-%02d-%02d Time %02d-%02d-%02d\n", year, months[month], day, hour, minute, second) > "/dev/stderr"
+			printf("	New Date %04d-%02d-%02d Time %02d-%02d-%02d\n", nyear, nmonth, nday, nhour, nminute, nsecond) > "/dev/stderr"
+			printf("touch -t %04d%02d%02d%02d%02d.%02d \"%s\"\n", nyear, nmonth, nday, nhour, nminute, nsecond, file)
+		}
+	'
+done
+

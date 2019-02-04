@@ -1,1 +1,11 @@
-hacked up version of bcvi and related tools which works on top of sshfs so that I can always use MacVim as my editor
+B & friends:
+	hacked up version of bcvi and related tools which works on
+	top of sshfs so that I can always use MacVim as my editor
+
+fixdate
+	Usage: /Users/tadhunt/Documents/Personal/src/tools/bin/sh/fixdate YYYY-MM-DD[:[-]HH[:[-]mm[:[-]ss]]] [files]...
+		Changes the date on [files]... to the provided date.
+		Where YYYY is the new year, MM is the new month, and DD is the new day
+		If HH is specified, it is added to the original hour
+		If mm is specified, it is added to the original minutes
+		If ss is specified, it is added to the original seconds
