@@ -27,7 +27,7 @@ esac
 
 argsep=""
 if [ "${BCVI_CONF+x}" = "x" ] ; then
-	editor="$HOME/bin/sh/bcvi"
+	editor="$HOME/bin/tools/bcvi"
 	argsep="--"
 fi
 
