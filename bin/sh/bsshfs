@@ -6,7 +6,7 @@ if [ -z "$1" ] ; then
 fi
 
 u="$1"
-v="/Volumes/$u"
+v="/tmp/$u"
 
 if [ ! -d "$v" ] ; then
 	mkdir "$v"

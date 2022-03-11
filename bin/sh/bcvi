@@ -1227,7 +1227,7 @@ sub execute_vi {
     my @files = $self->get_filenames();
 	for(@files) {
 		if(! /^\+[0-9]+$/) {
-			s/^\//\/Volumes\/$alias\//
+			s/^\//\/tmp\/$alias\//
 		}
 	}
     system('B', @files);
@@ -1241,7 +1241,7 @@ sub execute_viwait {
     my @files = $self->get_filenames();
 	for(@files) {
 		if(! /^\+[0-9]+$/) {
-			s/^\//\/Volumes\/$alias\//
+			s/^\//\/tmp\/$alias\//
 		}
 	}
     system('B', @files);
